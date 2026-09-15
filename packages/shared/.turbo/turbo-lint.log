@@ -1,0 +1,4 @@
+
+> @tsuz/shared@0.0.0 lint /Users/zhengzebiao/code/tsuz-web-jcc/packages/shared
+> tsc -p tsconfig.json --noEmit
+

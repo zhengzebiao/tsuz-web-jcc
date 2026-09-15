@@ -1,0 +1,14 @@
+
+> @tsuz/shared@0.0.0 test /Users/zhengzebiao/code/tsuz-web-jcc/packages/shared
+> vitest run
+
+
+ RUN  v3.2.7 /Users/zhengzebiao/code/tsuz-web-jcc/packages/shared
+
+ ✓ src/index.test.ts (3 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:33:09
+   Duration  489ms (transform 121ms, setup 0ms, collect 87ms, tests 2ms, environment 0ms, prepare 123ms)
+

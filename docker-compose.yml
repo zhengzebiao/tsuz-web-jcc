@@ -1,0 +1,17 @@
+name: ${COMPOSE_PROJECT_NAME:-tsuz-web-admin}
+
+services:
+  app:
+    image: ${DOCKER_IMAGE_NAME:-tsuz-web-admin}:${APP_VERSION:-local}
+    container_name: ${CONTAINER_NAME:-tsuz-web-admin}
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_PUBLIC_BASE: ${VITE_PUBLIC_BASE:-/}
+        VITE_APP_ENV: ${APP_ENV:-local}
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+    ports:
+      - "${APP_PORT:-7202}:80"
+    restart: unless-stopped

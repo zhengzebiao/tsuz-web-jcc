@@ -1,0 +1,18 @@
+
+> tsuz-web-admin-app@0.0.0 build /Users/zhengzebiao/code/tsuz-web-jcc/apps/app
+> tsc -p tsconfig.json --noEmit && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 1505 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.24 kB │ gzip:   0.52 kB
+dist/assets/index-BEKkzDeH.css    3.42 kB │ gzip:   1.36 kB
+dist/assets/index-DE40UD_s.js   560.96 kB │ gzip: 180.01 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.38s

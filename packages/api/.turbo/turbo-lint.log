@@ -1,0 +1,4 @@
+
+> @tsuz/api@0.0.0 lint /Users/zhengzebiao/code/tsuz-web-jcc/packages/api
+> tsc -p tsconfig.json --noEmit
+

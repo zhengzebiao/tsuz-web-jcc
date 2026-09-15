@@ -1,0 +1,5 @@
+
+> @tsuz/ui@0.0.0 test /Users/zhengzebiao/code/tsuz-web-jcc/packages/ui
+> node -e "console.log('No tests configured for @tsuz/ui')"
+
+No tests configured for @tsuz/ui

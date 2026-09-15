@@ -1,0 +1,4 @@
+
+> tsuz-web-admin-app@0.0.0 lint /Users/zhengzebiao/code/tsuz-web-jcc/apps/app
+> tsc -p tsconfig.json --noEmit
+

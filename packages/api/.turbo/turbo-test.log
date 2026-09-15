@@ -1,0 +1,14 @@
+
+> @tsuz/api@0.0.0 test /Users/zhengzebiao/code/tsuz-web-jcc/packages/api
+> vitest run
+
+
+ RUN  v3.2.7 /Users/zhengzebiao/code/tsuz-web-jcc/packages/api
+
+ ✓ src/index.test.ts (3 tests) 25ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:33:09
+   Duration  515ms (transform 59ms, setup 0ms, collect 57ms, tests 25ms, environment 0ms, prepare 41ms)
+
