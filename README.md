@@ -2,7 +2,7 @@
 
 这是一个基于 React、Vite 和 qiankun 的 JCC 只读资料子应用。登录用户可以检索六类当前版本资料、按 20 条分页并查看完整详情；应用不提供创建、编辑、启用、删除或同步等管理操作。
 
-> 包名、Docker 镜像名和部分部署标识暂时保留历史 `admin` 名称，以兼容现有发布配置；它们不代表当前业务功能。
+> workspace 包名和 qiankun 应用名暂时保留历史 `admin` / `mfe-app` 标识；Docker 镜像、容器、Compose 项目和静态资源路径已经使用独立的 JCC 标识，避免与 admin 服务冲突。
 
 ## 功能与路由
 
@@ -58,12 +58,12 @@ pnpm dev
 
 ## 配置
 
-| 变量                    | 独立开发示例 / 默认行为     | 用途                                         |
-| ----------------------- | -------------------------- | -------------------------------------------- |
-| `VITE_API_BASE_URL`     | `/api`                     | 浏览器请求基地址；宿主传值优先               |
-| `VITE_API_PROXY_TARGET` | `http://127.0.0.1:8001`    | 仅供 Vite 开发服务器代理 `/api`；不进入前端  |
-| `VITE_PUBLIC_BASE`      | `/`                        | Vite 静态资源基路径                          |
-| `VITE_APP_ENV`          | `local`                    | 构建环境标识                                 |
+| 变量                    | 独立开发示例 / 默认行为 | 用途                                        |
+| ----------------------- | ----------------------- | ------------------------------------------- |
+| `VITE_API_BASE_URL`     | `/api`                  | 浏览器请求基地址；宿主传值优先              |
+| `VITE_API_PROXY_TARGET` | `http://127.0.0.1:8001` | 仅供 Vite 开发服务器代理 `/api`；不进入前端 |
+| `VITE_PUBLIC_BASE`      | `/`                     | Vite 静态资源基路径                         |
+| `VITE_APP_ENV`          | `local`                 | 构建环境标识                                |
 
 这些变量都是构建时变量，修改部署值需要重新构建镜像。
 
@@ -108,7 +108,72 @@ pnpm compose:up
 pnpm compose:down
 ```
 
-现有 Docker、nginx、Compose、包名和 CI/CD 标识暂不重命名，避免影响既有发布流程。本仓库中的 JCC 改动不包含生产部署或真实数据迁移。
+Docker、Compose 和发布工作流使用独立的 `tsuz-web-jcc` 标识；workspace 包名仍保留历史 `admin` 名称，不影响 JCC 的容器隔离。
+
+## GitHub Actions CI/CD
+
+[CI 工作流](.github/workflows/ci.yml) 在提交到 `main` / `master` 以及针对这些分支的 Pull Request 上运行，依次执行冻结锁文件安装、lint、格式检查、测试和构建：
+
+```text
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm build
+```
+
+[Deploy 工作流](.github/workflows/deploy.yml) 使用不可变标签发布：`test-vX.Y.Z` 部署到 GitHub `test` Environment，`product-vX.Y.Z` 部署到 `product` Environment。标签发布会在部署服务器检出并校验精确标签提交、构建 JCC 镜像、推送镜像仓库，再用独立的 Compose 项目启动服务。工作流也支持从 Actions 页面选择环境并输入历史 `image_tag` 手动回滚；回滚只拉取并部署历史镜像，不重新构建。
+
+### GitHub Environments
+
+在 GitHub 仓库中创建 `test` 和 `product` Environments；生产环境可按需增加审批保护。每个 Environment 配置以下 Variables：
+
+| Variable                   | 用途                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| `DOCKER_REGISTRY`          | 镜像仓库主机，例如 `ccr.ccs.tencentyun.com`                  |
+| `DOCKER_IMAGE_NAME`        | 包含仓库和命名空间的 JCC 完整镜像名；test/product 应各自配置 |
+| `DOCKER_REGISTRY_USERNAME` | 镜像仓库登录账号                                             |
+| `DOCKER_BUILD_PLATFORM`    | 可选构建平台，默认 `linux/amd64`                             |
+| `DEPLOY_HOST`              | 目标服务器 SSH 主机                                          |
+| `DEPLOY_PORT`              | SSH 端口，默认 `22`                                          |
+| `DEPLOY_USER`              | SSH 用户                                                     |
+| `DEPLOY_PATH`              | 仅存放运行时 Compose 文件和 `.env` 的绝对目录                |
+| `DEPLOY_REPO_PATH`         | 服务器端源码检出绝对目录，必须与 `DEPLOY_PATH` 分离          |
+| `CONTAINER_NAME`           | JCC 独立容器名，例如 `tsuz-web-jcc-test`                     |
+| `APP_PORT`                 | 映射到容器 nginx 80 的宿主端口，通常为 `7202`                |
+| `APP_ENV`                  | 构建环境标识                                                 |
+| `VITE_API_BASE_URL`        | 构建时 API 基地址                                            |
+| `VITE_PUBLIC_BASE`         | 构建时静态资源前缀，部署 JCC 时使用 `/subapps/jcc/`          |
+
+Secrets：
+
+| Secret                  | 用途                                 |
+| ----------------------- | ------------------------------------ |
+| `DOCKER_REGISTRY_TOKEN` | 镜像仓库密码或 Token                 |
+| `SSH_PRIVATE_KEY`       | GitHub Actions 连接部署服务器的私钥  |
+| `SSH_KNOWN_HOSTS`       | 可选，固定部署服务器 host key 的内容 |
+
+部署服务器需安装 Git、Docker 和 Docker Compose plugin，能够访问 GitHub 与镜像仓库，并拥有本仓库的只读访问权。可参考 [.env.deploy.example](.env.deploy.example) 配置手工 Compose 环境，但不能把真实凭证提交到仓库。
+
+### 发布与回滚
+
+```bash
+git tag test-v1.0.1
+git push origin test-v1.0.1
+
+git tag product-v1.0.1
+git push origin product-v1.0.1
+```
+
+工作流拒绝 `latest` 以及环境前缀不匹配的标签。手动回滚时在 Actions → Deploy → Run workflow 中选择 `test` 或 `product`，并输入对应环境的历史不可变标签。
+
+`VITE_API_BASE_URL`、`VITE_PUBLIC_BASE` 和 `VITE_APP_ENV` 都是构建时变量。修改其中任意值需要创建新标签和新镜像，回滚会完整恢复历史镜像中的构建配置。
+
+### 主应用接入
+
+JCC 镜像以 `/subapps/jcc/` 作为部署时静态资源前缀并监听宿主端口 7202。真实环境还需在外层 Nginx 将 `/subapps/jcc/` 转发到 JCC 服务，并把主应用的 `VITE_JCC_APP_ENTRY` 配置为对应入口。用户路由 `/app/jcc` 仍由主应用处理，不应直接代理到子应用。
+
+本次仅配置自动化流程，没有创建或推送发布标签、写入 GitHub Variables/Secrets、推送镜像、连接服务器或执行真实部署。
 
 ## 模板分支与实施记录
 
@@ -120,3 +185,6 @@ pnpm compose:down
 - [第 1 阶段实现计划](plan/JCC_DATA_IMPLEMENTATION_PHASE_1_PLAN.md)
 - [第 1 阶段执行记录](plan/JCC_DATA_IMPLEMENTATION_PHASE_1_EXECUTION.md)
 - [前期实施草案](docs/curious-hugging-pixel.md)
+- [GitHub Actions CI/CD 实施方案](plan/GITHUB_ACTIONS_CICD_IMPLEMENTATION_PLAN.md)
+- [CI/CD 第 1 阶段实现计划](plan/GITHUB_ACTIONS_CICD_IMPLEMENTATION_PHASE_1_PLAN.md)
+- [CI/CD 第 1 阶段执行记录](plan/GITHUB_ACTIONS_CICD_IMPLEMENTATION_PHASE_1_EXECUTION.md)

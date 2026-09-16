@@ -1,9 +1,9 @@
-name: ${COMPOSE_PROJECT_NAME:-tsuz-web-admin}
+name: ${COMPOSE_PROJECT_NAME:-tsuz-web-jcc}
 
 services:
   app:
-    image: ${DOCKER_IMAGE_NAME:-tsuz-web-admin}:${APP_VERSION:-local}
-    container_name: ${CONTAINER_NAME:-tsuz-web-admin}
+    image: ${DOCKER_IMAGE_NAME:-tsuz-web-jcc}:${APP_VERSION:-local}
+    container_name: ${CONTAINER_NAME:-tsuz-web-jcc}
     build:
       context: .
       args:
