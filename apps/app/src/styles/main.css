@@ -138,10 +138,10 @@ body {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   min-height: 104px;
   overflow: hidden;
-  padding: 20px 26px;
+  padding: 10px;
   border: 1px solid #dce7e7;
   border-radius: 16px;
   background: #eaf3f0;
@@ -248,7 +248,7 @@ body {
 }
 
 .jcc-filter-bar {
-  padding: 20px 20px 0;
+  padding: 10px 10px 0;
 }
 
 .jcc-filter-bar .ant-input,

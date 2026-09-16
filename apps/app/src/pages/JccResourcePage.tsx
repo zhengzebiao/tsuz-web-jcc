@@ -124,7 +124,7 @@ export default function JccResourcePage({ resource, title, description }: JccRes
             loading={query.isLoading}
             dataSource={visibleData?.items ?? []}
             columns={columns}
-            scroll={{ x: 900, y: 500 }}
+            scroll={{ x: 900, y: 200 }}
             pagination={false}
             locale={{ emptyText: "暂无资料" }}
             onRow={(record) => ({
