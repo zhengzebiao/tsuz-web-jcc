@@ -19,7 +19,16 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       headers: {
         "Access-Control-Allow-Origin": "*"
-      }
+      },
+      proxy: env.VITE_API_PROXY_TARGET
+        ? {
+            "/api": {
+              target: env.VITE_API_PROXY_TARGET,
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/api/, "")
+            }
+          }
+        : undefined
     },
     resolve: {
       alias: {

@@ -20,9 +20,9 @@ describe("app store", () => {
   test("stores qiankun host props and current user", () => {
     const currentUser: CurrentUser = {
       id: "user-1",
-      name: "Demo Admin",
-      username: "admin",
-      roles: ["admin"],
+      name: "Demo User",
+      username: "demo-user",
+      roles: ["reader"],
       permissions: ["mfe:read"]
     };
 
@@ -42,7 +42,7 @@ describe("app store", () => {
     expect(state.basename).toBe("/apps/mfe-app");
     expect(state.apiBaseUrl).toBe("https://api.example.test");
     expect(state.hasAuthBridge).toBe(true);
-    expect(state.currentUser?.username).toBe("admin");
+    expect(state.currentUser?.username).toBe("demo-user");
     expect(state.lastMountedBy).toBe("qiankun host");
   });
 

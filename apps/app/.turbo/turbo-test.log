@@ -5,13 +5,16 @@
 
  RUN  v3.2.7 /Users/zhengzebiao/code/tsuz-web-jcc/apps/app
 
- ✓ src/qiankun.test.ts (4 tests) 3ms
- ✓ src/services/api-client.test.ts (2 tests) 8ms
+ ✓ src/qiankun.test.ts (4 tests) 6ms
+ ✓ src/services/jcc-api.test.ts (8 tests) 8ms
+ ✓ src/services/api-client.test.ts (2 tests) 9ms
  ✓ src/stores/app.store.test.ts (3 tests) 3ms
- ✓ src/App.test.tsx (1 test) 39ms
+ ✓ src/App.test.tsx (18 tests) 810ms
+ ✓ src/pages/JccResourcePage.test.tsx (6 tests) 1273ms
+   ✓ JccResourcePage queries > maps page and applied hero filters to limit and offset  531ms
 
- Test Files  4 passed (4)
-      Tests  10 passed (10)
-   Start at  12:33:10
-   Duration  2.00s (transform 147ms, setup 793ms, collect 1.14s, tests 53ms, environment 2.11s, prepare 270ms)
+ Test Files  6 passed (6)
+      Tests  41 passed (41)
+   Start at  16:23:36
+   Duration  4.91s (transform 410ms, setup 1.70s, collect 3.90s, tests 2.11s, environment 7.45s, prepare 688ms)
 
