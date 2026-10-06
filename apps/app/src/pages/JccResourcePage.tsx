@@ -172,6 +172,7 @@ export default function JccResourcePage({ resource, title, description }: JccRes
           </Flex>
         ) : null}
       </Card>
+      <ResourceIntro snapshot={visibleData?.snapshot} total={visibleData?.total} unavailable={query.isError} />
       <ResourceDetail
         resource={resource}
         item={query.isError ? undefined : selected}
@@ -200,18 +201,9 @@ function ResourceIntro({
 
   return (
     <div className="jcc-resource-intro">
-      <div className="jcc-orbit-mark" aria-hidden="true">
-        <span />
-      </div>
-      <div className="jcc-resource-intro-copy">
-        <Typography.Text className="jcc-eyebrow">CURRENT ARCHIVE</Typography.Text>
-        <Typography.Title level={3}>{snapshot?.mode_name || "JCC 资料库"}</Typography.Title>
-        <Typography.Text type="secondary">{summary}</Typography.Text>
-      </div>
-      <div className="jcc-resource-total">
-        <Typography.Text type="secondary">可用资料</Typography.Text>
-        <Typography.Title level={2}>{total ?? "—"}</Typography.Title>
-      </div>
+      <Typography.Text className="jcc-resource-intro-text">
+        {snapshot?.mode_name || "JCC 资料库"} {summary} · 可用资料 {total ?? "—"}
+      </Typography.Text>
     </div>
   );
 }

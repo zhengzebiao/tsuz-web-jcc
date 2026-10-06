@@ -114,7 +114,7 @@ const logoSubtitleStyle: CSSProperties = {
 
 const pageContainerStyle: CSSProperties = {
   display: "grid",
-  gap: 24
+  gap: 0
 };
 
 const pageHeaderStyle: CSSProperties = {

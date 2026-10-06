@@ -120,8 +120,8 @@ body {
 
 .subapp-card {
   overflow: hidden;
-  border: 1px solid #e0e6e9;
-  border-radius: 16px;
+  /* border: 1px solid #e0e6e9; */
+  /* border-radius: 16px; */
   box-shadow: 0 16px 36px rgba(37, 51, 57, 0.06);
 }
 
@@ -159,116 +159,21 @@ body {
 }
 
 .jcc-resource-intro {
-  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 104px;
-  overflow: hidden;
-  padding: 10px;
-  border: 1px solid #dce7e7;
-  border-radius: 16px;
-  background: #eaf3f0;
-}
-
-.jcc-resource-intro::after {
-  position: absolute;
-  top: -100px;
-  right: 10%;
-  width: 330px;
-  height: 330px;
-  border: 1px solid rgba(108, 145, 137, 0.23);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 25px rgba(108, 145, 137, 0.06),
-    0 0 0 52px rgba(108, 145, 137, 0.05);
-  content: "";
-  pointer-events: none;
-}
-
-.jcc-orbit-mark {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid #88a9a0;
-  border-radius: 50%;
-  transform: rotate(-25deg);
-}
-
-.jcc-orbit-mark::before,
-.jcc-orbit-mark::after {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #88a9a0;
-  content: "";
-}
-
-.jcc-orbit-mark::before {
-  top: 2px;
-  left: 5px;
-}
-.jcc-orbit-mark::after {
-  right: 3px;
-  bottom: 8px;
-  background: #d6ed4d;
-}
-
-.jcc-orbit-mark span {
-  width: 22px;
-  height: 22px;
-  border: 5px solid #597f77;
-  border-radius: 50%;
-}
-
-.jcc-resource-intro-copy {
-  position: relative;
-  z-index: 1;
-}
-
-.jcc-resource-intro-copy .ant-typography {
-  margin: 0;
-}
-
-.jcc-eyebrow {
-  color: #6c9189 !important;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-}
-
-.jcc-resource-intro-copy h3.ant-typography {
-  margin: 3px 0 1px;
-  color: #20353a;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 23px;
-}
-
-.jcc-resource-total {
-  position: relative;
-  z-index: 1;
-  margin-left: auto;
-  min-width: 110px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding: 0 24px 8px;
   text-align: right;
 }
 
-.jcc-resource-total .ant-typography {
-  display: block;
-  margin: 0;
-}
-
-.jcc-resource-total h2.ant-typography {
-  color: #284c4c;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 30px;
+.jcc-resource-intro-text {
+  color: #2563eb !important;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .jcc-resource-card {
-  background: #fff;
+  background: transparent;
 }
 
 .jcc-filter-bar {
@@ -356,9 +261,12 @@ body {
     /* padding: 20px 14px; */
   }
   .jcc-resource-intro {
-    padding: 18px;
+    justify-content: flex-start;
+    padding: 0 18px 8px;
+    text-align: left;
   }
-  .jcc-resource-total {
-    display: none;
+
+  .jcc-resource-intro-text {
+    font-size: 11px;
   }
 }
