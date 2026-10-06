@@ -128,11 +128,11 @@ const pageTitleStyle: CSSProperties = {
   margin: 0,
   fontSize: 28,
   lineHeight: 1.2,
-  padding: '16px 0 0 16px'
+  padding: '16px 0 0 24px'
 };
 
 const pageDescriptionStyle: CSSProperties = {
-  margin: "8px 0 0",
+  margin: "8px 0 0 24px",
   color: "#64748b"
 };
 

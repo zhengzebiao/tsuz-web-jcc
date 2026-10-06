@@ -22,7 +22,7 @@ import {
 } from "antd";
 import type { DescriptionsProps } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createMfeApiClient } from "../services/api-client";
 import {
   listJccAdventures,
@@ -62,6 +62,26 @@ export default function JccResourcePage({ resource, title, description }: JccRes
   const [filters, setFilters] = useState<FilterValues>({});
   const [draftFilters, setDraftFilters] = useState<FilterValues>({});
   const [selected, setSelected] = useState<ResourceItem>();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
+  const [tableScrollY, setTableScrollY] = useState(240);
+
+  useEffect(() => {
+    const updateTableScrollY = () => {
+      const card = cardRef.current;
+      const filters = filtersRef.current;
+      const pagination = paginationRef.current;
+      if (!card || !filters || !pagination) return;
+      setTableScrollY(Math.max(240, card.clientHeight - filters.offsetHeight - pagination.offsetHeight - 48));
+    };
+    updateTableScrollY();
+    const observer = new ResizeObserver(updateTableScrollY);
+    if (cardRef.current) observer.observe(cardRef.current);
+    if (filtersRef.current) observer.observe(filtersRef.current);
+    if (paginationRef.current) observer.observe(paginationRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const query = useQuery({
     queryKey: ["jcc", resource, page, filters],
@@ -100,16 +120,17 @@ export default function JccResourcePage({ resource, title, description }: JccRes
   };
 
   return (
-    <PageContainer title={title} description={description}>
-      <ResourceIntro snapshot={visibleData?.snapshot} total={visibleData?.total} unavailable={query.isError} />
-      <Card className="subapp-card jcc-resource-card">
-        <FilterBar
-          resource={resource}
-          values={draftFilters}
-          onChange={setDraftFilters}
-          onApply={applyFilters}
-          onReset={resetFilters}
-        />
+    <PageContainer className="jcc-resource-page" title={title} description={description}>
+      <Card ref={cardRef} className="subapp-card jcc-resource-card">
+        <div ref={filtersRef}>
+          <FilterBar
+            resource={resource}
+            values={draftFilters}
+            onChange={setDraftFilters}
+            onApply={applyFilters}
+            onReset={resetFilters}
+          />
+        </div>
         {query.isError ? (
           <Alert
             type="error"
@@ -124,7 +145,7 @@ export default function JccResourcePage({ resource, title, description }: JccRes
             loading={query.isLoading}
             dataSource={visibleData?.items ?? []}
             columns={columns}
-            scroll={{ x: 900, y: 200 }}
+            scroll={{ x: 1350, y: tableScrollY }}
             pagination={false}
             locale={{ emptyText: "暂无资料" }}
             onRow={(record) => ({
@@ -134,7 +155,7 @@ export default function JccResourcePage({ resource, title, description }: JccRes
           />
         )}
         {!query.isError ? (
-          <Flex justify="space-between" align="center" className="jcc-pagination-row">
+          <Flex ref={paginationRef} justify="space-between" align="center" className="jcc-pagination-row">
             <Typography.Text type="secondary">
               {query.isFetching && !query.isLoading ? <Spin size="small" /> : null}
               {visibleData ? ` 已加载 ${visibleData.items.length} 条` : "等待资料"}
