@@ -1,8 +1,46 @@
-import { Collapse, Empty, Spin } from "antd";
+import { Button, Collapse, Empty, Popover, Spin } from "antd";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useLayoutEffect, useRef } from "react";
-import type { JccAgentMessage } from "../../services/jcc-agent-api";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { JccAgentMessage, JccAgentStreamEvent } from "../../services/jcc-agent-api";
+
+export interface ConversationLiveResponse {
+  userMessage: JccAgentMessage;
+  assistantMessage: JccAgentMessage;
+  events: JccAgentStreamEvent[];
+  status: "streaming" | "completed" | "failed" | "cancelled" | "disconnected";
+}
+
+const TOOL_LABELS: Record<string, string> = {
+  derive_lineup_candidates: "推导阵容候选",
+  get_equipment: "查询装备",
+  get_hero: "查询英雄",
+  get_snapshot_metadata: "查询版本快照",
+  get_trait: "查询羁绊",
+  search_adventures: "搜索特殊机制",
+  search_augments: "搜索强化符文",
+  search_equipment: "搜索装备",
+  search_galaxies: "搜索奇遇",
+  search_heroes: "搜索英雄",
+  search_knowledge: "查询知识库",
+  search_traits: "搜索羁绊"
+};
+
+const CALL_DETAIL_EVENT_TYPES = new Set([
+  "message.queued",
+  "run.started",
+  "tool.started",
+  "tool.completed",
+  "tool.failed",
+  "source"
+]);
+
+const SOURCE_LABELS: Record<string, string> = {
+  official_structured_data: "官方结构化数据",
+  rag_document: "知识库资料",
+  system_derived: "系统推导",
+  model_explanation: "模型解释"
+};
 
 export interface ConversationMessageListProps {
   messages: JccAgentMessage[];
@@ -12,6 +50,7 @@ export interface ConversationMessageListProps {
   error?: unknown;
   onLoadPrevious: () => void;
   onRetry: () => void;
+  liveResponse?: ConversationLiveResponse;
 }
 
 interface MessageGroup {
@@ -72,11 +111,24 @@ export default function ConversationMessageList({
   hasPreviousPage,
   error,
   onLoadPrevious,
-  onRetry
+  onRetry,
+  liveResponse
 }: ConversationMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingRestoreRef = useRef<{ top: number; height: number } | null>(null);
   const previousMessageCountRef = useRef(messages.length);
+  const previousLiveMessageIdRef = useRef<string | undefined>(undefined);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const element = scrollRef.current;
+    if (!element) return;
+    if (typeof element.scrollTo === "function") {
+      element.scrollTo({ top: element.scrollHeight, behavior });
+    } else {
+      element.scrollTop = element.scrollHeight;
+    }
+  };
 
   useLayoutEffect(() => {
     const restore = pendingRestoreRef.current;
@@ -88,6 +140,19 @@ export default function ConversationMessageList({
     previousMessageCountRef.current = messages.length;
   }, [messages.length]);
 
+  useLayoutEffect(() => {
+    if (isInitialLoading || pendingRestoreRef.current) return;
+    scrollToBottom("auto");
+  }, [isInitialLoading]);
+
+  useEffect(() => {
+    const liveMessageId = liveResponse?.userMessage.id;
+    if (!liveMessageId) return;
+    const isNewLiveMessage = previousLiveMessageIdRef.current !== liveMessageId;
+    previousLiveMessageIdRef.current = liveMessageId;
+    if (isNewLiveMessage || isNearBottom) scrollToBottom(isNewLiveMessage ? "auto" : "smooth");
+  }, [isNearBottom, liveResponse?.assistantMessage.content, liveResponse?.userMessage.id]);
+
   const loadPrevious = () => {
     const element = scrollRef.current;
     if (element) {
@@ -98,7 +163,9 @@ export default function ConversationMessageList({
 
   const handleScroll = () => {
     const element = scrollRef.current;
-    if (element && element.scrollTop <= 24 && hasPreviousPage && !isLoadingPrevious) {
+    if (!element) return;
+    setIsNearBottom(element.scrollHeight - element.scrollTop - element.clientHeight <= 48);
+    if (element.scrollTop <= 24 && hasPreviousPage && !isLoadingPrevious) {
       loadPrevious();
     }
   };
@@ -137,7 +204,7 @@ export default function ConversationMessageList({
         ) : null}
       </div>
 
-      {messages.length === 0 ? (
+      {messages.length === 0 && !liveResponse ? (
         <Empty description="暂无消息历史" />
       ) : (
         <div className="jcc-conversation-message-list">
@@ -168,8 +235,20 @@ export default function ConversationMessageList({
               <EventCollapse events={group.events} key={`events-${index}`} />
             )
           )}
+          {liveResponse ? <LiveResponse response={liveResponse} /> : null}
         </div>
       )}
+
+      {!isNearBottom ? (
+        <button
+          type="button"
+          className="jcc-conversation-scroll-bottom"
+          aria-label="滚动到底部"
+          onClick={() => scrollToBottom()}
+        >
+          ↓
+        </button>
+      ) : null}
 
       {error && messages.length > 0 ? (
         <div className="jcc-conversation-message-inline-error">
@@ -183,24 +262,161 @@ export default function ConversationMessageList({
   );
 }
 
-function EventCollapse({ events }: { events: JccAgentMessage[] }) {
+function LiveResponse({ response }: { response: ConversationLiveResponse }) {
+  const events = response.events.filter((event) => CALL_DETAIL_EVENT_TYPES.has(event.type));
+  const eventMessages: ConversationEvent[] = events.map((event, index) => ({
+    id: `${response.assistantMessage.id}-${event.id ?? index}`,
+    conversation_id: response.assistantMessage.conversation_id,
+    role: "tool",
+    content: formatLiveEvent(event),
+    created_at: new Date().toISOString(),
+    eventType: event.type
+  }));
+
+  return (
+    <div className="jcc-conversation-live-response">
+      <div className="jcc-conversation-message-row jcc-conversation-message-row--user">
+        <div className="jcc-conversation-bubble">
+          <div className="jcc-conversation-content">{response.userMessage.content}</div>
+        </div>
+      </div>
+      <div className="jcc-conversation-message-row jcc-conversation-message-row--assistant">
+        <div className="jcc-conversation-bubble">
+          <div className="jcc-conversation-content jcc-conversation-markdown">
+            {response.assistantMessage.content?.trim() ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{response.assistantMessage.content}</ReactMarkdown>
+            ) : null}
+          </div>
+          {response.status !== "completed" || events.length ? (
+            <div className="jcc-conversation-live-status">
+              {response.status !== "completed" ? (
+                <>
+                  <span className="jcc-conversation-live-status__label">正在生成…</span>
+                  {response.status !== "streaming" ? (
+                    <span className="jcc-conversation-live-status__detail">{liveStatusLabel(response.status)}</span>
+                  ) : null}
+                </>
+              ) : null}
+              {events.length ? (
+                <Popover
+                  trigger="click"
+                  placement="topLeft"
+                  content={<EventDetails events={eventMessages} />}
+                  title="调用详情"
+                >
+                  <Button type="link" size="small" className="jcc-conversation-live-details">
+                    查看调用详情
+                  </Button>
+                </Popover>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function readEventField(data: unknown, ...keys: string[]) {
+  if (!data || typeof data !== "object") return undefined;
+  for (const key of keys) {
+    const value = (data as Record<string, unknown>)[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return undefined;
+}
+
+function formatLiveEvent(event: JccAgentStreamEvent) {
+  const toolName = readEventField(event.data, "tool_name", "toolName") ?? "未知工具";
+  const sourceType = readEventField(event.data, "source_type", "sourceType") ?? "未知来源";
+  const model = readEventField(event.data, "model", "model_name") ?? "未知模型";
+
+  switch (event.type) {
+    case "message.queued":
+      return "开始处理...";
+    case "run.started":
+      return `调用模型 ${model}`;
+    case "tool.started":
+      return `调用 ${TOOL_LABELS[toolName] ?? toolName}`;
+    case "tool.completed":
+      return `调用 ${TOOL_LABELS[toolName] ?? toolName} 成功`;
+    case "tool.failed":
+      return `调用 ${TOOL_LABELS[toolName] ?? toolName} 失败`;
+    case "source":
+      return `查询资料来源于 ${SOURCE_LABELS[sourceType] ?? sourceType}`;
+    default:
+      if (typeof event.data === "string") return event.data;
+      return `${event.type}: ${JSON.stringify(event.data)}`;
+  }
+}
+
+function eventClassName(event: JccAgentStreamEvent) {
+  if (event.type === "message.queued") return "queued";
+  if (event.type === "run.started") return "run";
+  if (event.type.startsWith("tool.")) return "tool";
+  if (event.type === "source") return "source";
+  if (event.type.startsWith("message.")) return "terminal";
+  return "unknown";
+}
+
+function liveStatusLabel(status: ConversationLiveResponse["status"]) {
+  return {
+    streaming: "正在生成…",
+    completed: "已完成",
+    failed: "执行失败",
+    cancelled: "已停止",
+    disconnected: "连接中断"
+  }[status];
+}
+
+type ConversationEvent = JccAgentMessage & { eventType?: string };
+
+function formatEventTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function EventDetails({ events }: { events: ConversationEvent[] }) {
+  return (
+    <div className="jcc-conversation-live-details-list">
+      {events.map((event) => (
+        <div
+          className={`jcc-conversation-event jcc-conversation-event--${event.eventType ? eventClassName({ type: event.eventType, data: event.content }) : "unknown"}`}
+          key={event.id}
+        >
+          <time>{formatEventTime(event.created_at)}：</time>
+          <div className="jcc-conversation-content">{event.content?.trim() || "空事件记录"}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EventCollapse({ events }: { events: ConversationEvent[] }) {
   return (
     <Collapse
       className="jcc-conversation-events"
       items={[
         {
           key: "events",
-          label: `${events.length} 条事件记录`,
+          label: "调用工具",
           children: (
             <div>
-              {events.map((event) => (
-                <div className="jcc-conversation-event" key={event.id}>
-                  <time>{event.created_at}</time>
-                  <div className="jcc-conversation-content">
-                    {event.content?.trim() || "空事件记录"}
+              {events.map((event) => {
+                const streamEvent = event.eventType ? { type: event.eventType, data: event.content } : undefined;
+                return (
+                  <div
+                    className={`jcc-conversation-event jcc-conversation-event--${streamEvent ? eventClassName(streamEvent) : "unknown"}`}
+                    key={event.id}
+                  >
+                    <time>{formatEventTime(event.created_at)}：</time>
+                    <div className="jcc-conversation-content">
+                      {event.content?.trim() || "空事件记录"}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         }

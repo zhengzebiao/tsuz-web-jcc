@@ -39,6 +39,32 @@ describe("createApiClient", () => {
     expect(capturedBody).toBe(JSON.stringify({ name: "Demo" }));
   });
 
+  test("returns an unconsumed response from rawRequest and forwards headers and signal", async () => {
+    let capturedHeaders: Headers | undefined;
+    let capturedSignal: AbortSignal | undefined;
+    const client = createApiClient({
+      baseUrl: "/api",
+      getAccessToken: async () => "token-raw",
+      fetcher: async (_input, init) => {
+        capturedHeaders = init?.headers as Headers;
+        capturedSignal = init?.signal;
+        return new Response("event: done\\ndata: ok\\n\\n", { status: 200 });
+      }
+    });
+    const controller = new AbortController();
+
+    const response = await client.rawRequest("/events", {
+      headers: { Accept: "text/event-stream", "Last-Event-ID": "event-1" },
+      signal: controller.signal
+    });
+
+    expect(await response.text()).toBe("event: done\\ndata: ok\\n\\n");
+    expect(capturedHeaders?.get("Authorization")).toBe("Bearer token-raw");
+    expect(capturedHeaders?.get("Accept")).toBe("text/event-stream");
+    expect(capturedHeaders?.get("Last-Event-ID")).toBe("event-1");
+    expect(capturedSignal).toBe(controller.signal);
+  });
+
   test("calls unauthorized handler and throws ApiError for failed responses", async () => {
     let unauthorized = false;
     const client = createApiClient({

@@ -380,6 +380,8 @@ packages/shared/src/index.ts
 - 完成、失败、取消状态；
 - 断线和 Last-Event-ID 恢复。
 
+第三阶段实现计划：[第三阶段实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_PLAN.md)。当前状态为“实施中”；此前的页面工作区与输入栏改造记录在[第三阶段前置 UI 执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)，不等同于 SSE 问答已完成。
+
 ### 第四步：测试和文档
 
 - API 请求和 SSE 解析测试；

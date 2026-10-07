@@ -6,7 +6,8 @@ import {
   sortConversationMessages
 } from "./ConversationMessageList";
 import ConversationMessageList from "./ConversationMessageList";
-import type { JccAgentMessage } from "../../services/jcc-agent-api";
+import type { JccAgentMessage, JccAgentStreamEvent } from "../../services/jcc-agent-api";
+import type { ConversationLiveResponse } from "./ConversationMessageList";
 
 function message(overrides: Partial<JccAgentMessage>): JccAgentMessage {
   return {
@@ -115,8 +116,8 @@ describe("ConversationMessageList", () => {
       />
     );
 
-    expect(screen.getByText("1 条事件记录")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("1 条事件记录"));
+    expect(screen.getByText("调用工具")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("调用工具"));
     expect(screen.getByText("空事件记录")).toBeInTheDocument();
   });
 
@@ -146,7 +147,7 @@ describe("ConversationMessageList", () => {
       />
     );
 
-    fireEvent.click(screen.getByText("1 条事件记录"));
+    fireEvent.click(screen.getByText("调用工具"));
     expect(screen.getByText("未知事件")).toBeInTheDocument();
     expect(document.querySelector(".jcc-conversation-role")).not.toBeInTheDocument();
   });
@@ -180,6 +181,87 @@ describe("ConversationMessageList", () => {
     fireEvent.click(screen.getByRole("button", { name: "加载更早消息" }));
 
     expect(scroll.scrollTop).toBe(160);
+  });
+
+  test("renders live response markdown, events, and terminal status", () => {
+    const events: JccAgentStreamEvent[] = [
+      { type: "tool.started", id: "tool-1", data: { tool_name: "search_galaxies" } },
+      { type: "tool.completed", id: "tool-2", data: { tool_name: "search_galaxies" } },
+      { type: "source", id: "source-1", data: { source_type: "rag_document" } },
+      { type: "run.started", id: "run-1", data: { model: "claude" } },
+      { type: "message.queued", id: "queued-1", data: {} }
+    ];
+    const liveResponse: ConversationLiveResponse = {
+      userMessage: message({ id: "live-user", role: "user", content: "实时问题" }),
+      assistantMessage: message({ id: "live-assistant", role: "assistant", content: "# 增量回答" }),
+      events,
+      status: "completed"
+    };
+
+    render(
+      <ConversationMessageList
+        messages={[]}
+        isInitialLoading={false}
+        isLoadingPrevious={false}
+        hasPreviousPage={false}
+        onLoadPrevious={vi.fn()}
+        onRetry={vi.fn()}
+        liveResponse={liveResponse}
+      />
+    );
+
+    expect(screen.getByText("实时问题")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "增量回答" })).toBeInTheDocument();
+    expect(screen.queryByText("已完成")).not.toBeInTheDocument();
+    expect(screen.getByText("查看调用详情")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("查看调用详情"));
+    expect(screen.getAllByText(/调用 搜索奇遇/)).toHaveLength(2);
+  });
+
+  test.each([
+    ["failed", "执行失败"],
+    ["cancelled", "已停止"],
+    ["disconnected", "连接中断"]
+  ] as const)("renders live response status %s", (status, label) => {
+    render(
+      <ConversationMessageList
+        messages={[]}
+        isInitialLoading={false}
+        isLoadingPrevious={false}
+        hasPreviousPage={false}
+        onLoadPrevious={vi.fn()}
+        onRetry={vi.fn()}
+        liveResponse={{
+          userMessage: message({ id: `user-${status}`, role: "user", content: "问题" }),
+          assistantMessage: message({ id: `assistant-${status}`, content: "回答" }),
+          events: [],
+          status
+        }}
+      />
+    );
+
+    expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  test("does not render heartbeat as a live event", () => {
+    render(
+      <ConversationMessageList
+        messages={[]}
+        isInitialLoading={false}
+        isLoadingPrevious={false}
+        hasPreviousPage={false}
+        onLoadPrevious={vi.fn()}
+        onRetry={vi.fn()}
+        liveResponse={{
+          userMessage: message({ id: "live-user", role: "user", content: "问题" }),
+          assistantMessage: message({ id: "live-assistant", content: "回答" }),
+          events: [{ type: "heartbeat", data: {} }],
+          status: "streaming"
+        }}
+      />
+    );
+
+    expect(screen.queryByText(/heartbeat/)).not.toBeInTheDocument();
   });
 
   test("loads earlier messages and exposes retry states", () => {

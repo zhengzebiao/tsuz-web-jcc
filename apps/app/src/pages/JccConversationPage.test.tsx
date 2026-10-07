@@ -8,17 +8,30 @@ import { createMfeApiClient } from "../services/api-client";
 import type {
   JccAgentConversation,
   JccAgentListResponse,
-  JccAgentMessage
+  JccAgentMessage,
+  JccAgentStreamOptions
 } from "../services/jcc-agent-api";
+import { cancelJccAgentMessage, streamJccAgentMessageEvents } from "../services/jcc-agent-api";
 import JccConversationPage from "./JccConversationPage";
 
 vi.mock("../services/api-client", () => ({
   createMfeApiClient: vi.fn()
 }));
 
+vi.mock("../services/jcc-agent-api", async () => {
+  const actual = await vi.importActual<typeof import("../services/jcc-agent-api")>("../services/jcc-agent-api");
+  return {
+    ...actual,
+    cancelJccAgentMessage: vi.fn(),
+    streamJccAgentMessageEvents: vi.fn()
+  };
+});
+
 const apiGet = vi.fn<ApiClient["get"]>();
 const apiPost = vi.fn<ApiClient["post"]>();
-const apiClient = { get: apiGet, post: apiPost } as unknown as ApiClient;
+const apiClient = { get: apiGet, post: apiPost, rawRequest: vi.fn() } as unknown as ApiClient;
+const streamMock = vi.mocked(streamJccAgentMessageEvents);
+const cancelMock = vi.mocked(cancelJccAgentMessage);
 const conversation: JccAgentConversation = {
   id: "conversation-1",
   title: "上分计划",
@@ -35,6 +48,8 @@ const currentMessages = [
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(createMfeApiClient).mockReturnValue(apiClient);
+  streamMock.mockResolvedValue(undefined);
+  cancelMock.mockResolvedValue(undefined);
   apiPost.mockResolvedValue(createMessage({ id: "message-4", role: "user", content: "新问题" }));
   apiGet.mockImplementation((path) => {
     if (String(path).endsWith("/messages")) {
@@ -64,6 +79,84 @@ describe("JccConversationPage", () => {
     expect(screen.getByRole("button", { name: "发送" })).toBeDisabled();
     expect(apiGet.mock.calls.some(([path]) => String(path).includes("/events"))).toBe(false);
     expect(apiGet.mock.calls.some(([path]) => String(path).includes("/cancel"))).toBe(false);
+  });
+
+  test("renders streamed text and completed state", async () => {
+    let options!: JccAgentStreamOptions;
+    streamMock.mockImplementation(async (_client, _conversationId, _messageId, streamOptions) => {
+      options = streamOptions;
+      streamOptions.onEvent({ id: "event-1", type: "text.delta", data: { text: "实时回答" } });
+      streamOptions.onEvent({ id: "event-2", type: "heartbeat", data: {} });
+      streamOptions.onEvent({ id: "event-3", type: "message.completed", data: {} });
+    });
+    renderPage();
+    await screen.findByText("请分析");
+    fireEvent.change(screen.getByRole("textbox", { name: "输入问题" }), { target: { value: "新问题" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+
+    expect(await screen.findByText("实时回答")).toBeInTheDocument();
+    expect(screen.getByText("实时回答")).toBeInTheDocument();
+    expect(options.lastEventId).toBeUndefined();
+    expect(screen.queryByText(/heartbeat/)).not.toBeInTheDocument();
+  });
+
+  test("cancels a running stream and aborts its signal", async () => {
+    let options!: JccAgentStreamOptions;
+    streamMock.mockImplementation(async (_client, _conversationId, _messageId, streamOptions) => {
+      options = streamOptions;
+      await new Promise(() => undefined);
+    });
+    renderPage();
+    await screen.findByText("请分析");
+    fireEvent.change(screen.getByRole("textbox", { name: "输入问题" }), { target: { value: "新问题" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+    fireEvent.click(await screen.findByRole("button", { name: "停止" }));
+
+    await waitFor(() => expect(cancelMock).toHaveBeenCalledWith(apiClient, "conversation-1", "message-4"));
+    expect(options.signal?.aborted).toBe(true);
+    expect(screen.queryByText("已完成")).not.toBeInTheDocument();
+  });
+
+  test("reconnects after a dropped stream with the last event id", async () => {
+    let call = 0;
+    let firstOptions!: JccAgentStreamOptions;
+    let secondOptions!: JccAgentStreamOptions;
+    streamMock.mockImplementation(async (_client, _conversationId, _messageId, streamOptions) => {
+      call += 1;
+      if (call === 1) {
+        firstOptions = streamOptions;
+        streamOptions.onEvent({ id: "event-7", type: "text.delta", data: { text: "部分" } });
+        return;
+      }
+      secondOptions = streamOptions;
+      streamOptions.onEvent({ id: "event-8", type: "text.delta", data: { text: "完成" } });
+      streamOptions.onEvent({ id: "event-9", type: "message.completed", data: {} });
+    });
+    renderPage();
+    await screen.findByText("请分析");
+    fireEvent.change(screen.getByRole("textbox", { name: "输入问题" }), { target: { value: "新问题" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+    expect(await screen.findByText("部分")).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "重新连接" }));
+
+    await waitFor(() => expect(call).toBe(2));
+    expect(firstOptions.lastEventId).toBeUndefined();
+    expect(secondOptions.lastEventId).toBe("event-7");
+    expect(await screen.findByText("部分完成")).toBeInTheDocument();
+  });
+
+  test("does not append a duplicate event id", async () => {
+    streamMock.mockImplementation(async (_client, _conversationId, _messageId, streamOptions) => {
+      streamOptions.onEvent({ id: "same", type: "text.delta", data: { text: "一次" } });
+      streamOptions.onEvent({ id: "same", type: "text.delta", data: { text: "重复" } });
+    });
+    renderPage();
+    await screen.findByText("请分析");
+    fireEvent.change(screen.getByRole("textbox", { name: "输入问题" }), { target: { value: "新问题" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+
+    expect(await screen.findByText("一次")).toBeInTheDocument();
+    expect(screen.queryByText("一次重复")).not.toBeInTheDocument();
   });
 
   test("loads an earlier offset page and merges messages in display order", async () => {

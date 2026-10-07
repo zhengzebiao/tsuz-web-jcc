@@ -34,6 +34,7 @@
 }
 
 .jcc-conversation-message-scroll {
+  position: relative;
   flex: 1;
   min-height: 180px;
   overflow-y: auto;
@@ -41,6 +42,30 @@
   border: 1px solid #dfe5e8;
   border-radius: 12px;
   background: #fbfcfa;
+}
+
+.jcc-conversation-scroll-bottom {
+  position: fixed;
+  z-index: 2;
+  right: 40px;
+  bottom: 140px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  place-items: center;
+  border: 1px solid #cbd5d8;
+  border-radius: 50%;
+  background: #fff;
+  color: #456;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.jcc-conversation-scroll-bottom:hover {
+  border-color: #9baaaf;
+  background: #f1f5f2;
 }
 
 .jcc-conversation-composer {
@@ -108,7 +133,7 @@
 .jcc-conversation-message-row {
   display: flex;
   flex-direction: column;
-  max-width: 82%;
+  max-width: 100%;
   gap: 6px;
 }
 
@@ -124,9 +149,56 @@
 }
 
 .jcc-conversation-bubble {
+  width: fit-content;
+  max-width: min(100%, 900px);
+  box-sizing: border-box;
   padding: 10px 12px;
+  border: 1px solid #dfe5e8;
   border-radius: 10px;
   background: #edf2e7;
+}
+
+.jcc-conversation-message-row--assistant .jcc-conversation-bubble {
+  width: 100%;
+}
+
+.jcc-conversation-live-response {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.jcc-conversation-live-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #65747a;
+  font-size: 12px;
+}
+
+.jcc-conversation-live-details {
+  padding: 0;
+  font-size: 12px;
+}
+
+.jcc-conversation-live-details-list {
+  width: min(520px, 70vw);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.jcc-conversation-live-details-list .jcc-conversation-event {
+  padding: 6px 0;
+}
+
+.jcc-conversation-live-status__label {
+  color: #1677ff;
+}
+
+.jcc-conversation-live-status__detail {
+  color: #819098;
 }
 
 .jcc-conversation-message-row--user .jcc-conversation-bubble {
@@ -212,8 +284,12 @@
 }
 
 .jcc-conversation-event {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
   padding: 8px 0;
   border-bottom: 1px solid #dfe5e8;
+  line-height: 1.5;
 }
 
 .jcc-conversation-event:last-child {
@@ -221,8 +297,34 @@
 }
 
 .jcc-conversation-event time {
+  flex: 0 0 auto;
   color: #819098;
   font-size: 11px;
+  white-space: nowrap;
+}
+
+.jcc-conversation-event--queued .jcc-conversation-content {
+  color: #1677ff;
+}
+
+.jcc-conversation-event--run .jcc-conversation-content {
+  color: #722ed1;
+}
+
+.jcc-conversation-event--tool .jcc-conversation-content {
+  color: #08979c;
+}
+
+.jcc-conversation-event--source .jcc-conversation-content {
+  color: #389e0d;
+}
+
+.jcc-conversation-event--terminal .jcc-conversation-content {
+  color: #d46b08;
+}
+
+.jcc-conversation-event--unknown .jcc-conversation-content {
+  color: #65747a;
 }
 
 .jcc-conversation-message-state,

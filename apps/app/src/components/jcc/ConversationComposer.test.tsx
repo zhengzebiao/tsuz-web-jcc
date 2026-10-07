@@ -5,10 +5,11 @@ import ConversationComposer from "./ConversationComposer";
 
 afterEach(() => cleanup());
 
-function renderComposer(value = "", isSending = false) {
+function renderComposer(value = "", isSending = false, isCancelling = false) {
   const onChange = vi.fn();
   const onStrategyModeChange = vi.fn();
   const onSubmit = vi.fn();
+  const onCancel = vi.fn();
   render(
     <AntApp>
       <div data-testid="composer-test-root">
@@ -16,6 +17,8 @@ function renderComposer(value = "", isSending = false) {
         value={value}
         strategyMode="gamble"
         isSending={isSending}
+        isCancelling={isCancelling}
+        onCancel={onCancel}
         onChange={onChange}
         onStrategyModeChange={onStrategyModeChange}
         onSubmit={onSubmit}
@@ -23,7 +26,7 @@ function renderComposer(value = "", isSending = false) {
       </div>
     </AntApp>
   );
-  return { onChange, onStrategyModeChange, onSubmit };
+  return { onChange, onStrategyModeChange, onSubmit, onCancel };
 }
 
 describe("ConversationComposer", () => {
@@ -38,9 +41,16 @@ describe("ConversationComposer", () => {
     expect(onSubmit).toHaveBeenCalledOnce();
   });
 
-  test("disables controls while sending", () => {
-    renderComposer("问题", true);
+  test("stops a running response", () => {
+    const { onCancel } = renderComposer("问题", true);
+    fireEvent.click(screen.getByRole("button", { name: "停止" }));
+    expect(onCancel).toHaveBeenCalledOnce();
     expect(screen.getByRole("textbox", { name: "输入问题" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "发送中" })).toBeDisabled();
+  });
+
+  test("disables the stop action while cancelling", () => {
+    renderComposer("问题", true, true);
+    expect(screen.getByRole("button", { name: "停止中" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "输入问题" })).toBeDisabled();
   });
 });

@@ -13,6 +13,7 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
 
 export interface ApiClient {
   request<T = unknown>(path: string, options?: ApiRequestOptions): Promise<T>;
+  rawRequest(path: string, options?: ApiRequestOptions): Promise<Response>;
   get<T = unknown>(path: string, options?: ApiRequestOptions): Promise<T>;
   post<T = unknown>(path: string, body?: unknown, options?: ApiRequestOptions): Promise<T>;
   put<T = unknown>(path: string, body?: unknown, options?: ApiRequestOptions): Promise<T>;
@@ -41,7 +42,7 @@ export function createApiClient(options: CreateApiClientOptions): ApiClient {
     throw new Error("createApiClient requires a fetch implementation.");
   }
 
-  async function request<T = unknown>(path: string, requestOptions: ApiRequestOptions = {}): Promise<T> {
+  async function rawRequest(path: string, requestOptions: ApiRequestOptions = {}): Promise<Response> {
     const { query, body, headers, ...init } = requestOptions;
     const requestHeaders = new Headers(options.defaultHeaders);
 
@@ -65,21 +66,27 @@ export function createApiClient(options: CreateApiClientOptions): ApiClient {
     }
 
     const response = await fetcher(resolveUrl(options.baseUrl, path, query), requestInit);
-    const data = await parseResponse(response);
 
     if (response.status === 401) {
       await options.onUnauthorized?.(response);
     }
 
     if (!response.ok) {
+      const data = await parseResponse(response);
       throw new ApiError("API request failed with status " + response.status, response.status, response, data);
     }
 
-    return data as T;
+    return response;
+  }
+
+  async function request<T = unknown>(path: string, requestOptions: ApiRequestOptions = {}): Promise<T> {
+    const response = await rawRequest(path, requestOptions);
+    return (await parseResponse(response)) as T;
   }
 
   return {
     request,
+    rawRequest,
     get: (path, requestOptions) => request(path, { ...requestOptions, method: "GET" }),
     post: (path, body, requestOptions) => request(path, { ...requestOptions, method: "POST", body }),
     put: (path, body, requestOptions) => request(path, { ...requestOptions, method: "PUT", body }),
