@@ -410,3 +410,12 @@ packages/shared/src/index.ts
 - [阶段一执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_1_EXECUTION.md)。
 
 阶段一已落地：会话普通 REST wrapper、`/jcc/conversations` 列表与创建弹窗、`/jcc/conversation/:conversationId` 最小详情页、菜单接入及自动化测试。阶段一明确未实现历史消息完整交互、顶部向上加载、SSE、发送/停止体验和工具/来源折叠；这些能力仍按本方案进入第二、三阶段。真实 Agent 服务联调和部署不在本次代码验证范围内。
+
+## 十二、阶段二落地状态
+
+阶段二“实现历史消息页面”已完成代码和修改/新增文件定向验证，阶段状态为“部分完成”：
+
+- [阶段二实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_2_PLAN.md)；
+- [阶段二执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_2_EXECUTION.md)。
+
+阶段二已实现详情页历史消息查询、角色布局、工具/系统折叠事件、顶部 offset 分页和滚动位置恢复。由于消息类型尚无结构化工具关联字段，tool/system 当前按消息顺序挂到最近 assistant；由于未执行真实 Agent 服务联调，`offset=0` 的实际方向仍待确认。全量测试、构建和真实浏览器验证按当前阶段约束未执行。SSE、发送、停止和断线恢复仍属于第三阶段。
