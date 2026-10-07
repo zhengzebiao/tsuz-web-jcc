@@ -1,6 +1,6 @@
 # JCC Agent 会话：第 1 阶段“接入会话 API 和两个路由”实现计划
 
-> 状态：实施中
+> 状态：部分完成
 >
 > 总实施方案：[JCC Agent 会话实施方案](../docs/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PLAN.md)
 >

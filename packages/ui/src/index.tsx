@@ -37,7 +37,7 @@ export function PageContainer({ title, description, actions, children, className
             {title ? <h1 style={pageTitleStyle}>{title}</h1> : null}
             {description ? <p style={pageDescriptionStyle}>{description}</p> : null}
           </div>
-          {actions ? <div>{actions}</div> : null}
+          {actions ? <div style={{ padding:' 16px 24px 0px 0px'}}>{actions}</div> : null}
         </header>
       ) : null}
       {children}

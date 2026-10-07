@@ -10,7 +10,7 @@
 
 ## 1. 执行范围与结论
 
-本阶段已完成核心代码、定向测试和类型检查；App 回归测试首次因旧菜单数量断言失败，现已同步为 7 项并待重跑。全量测试、构建、diff 检查及总方案最终核验待执行，因此当前结论为“部分完成”。
+本阶段已完成核心代码、定向测试、类型检查和 App 回归测试。App 回归测试共 1 个文件、18 项通过。根据当前安排，全量测试及其他完整质量检查留待后续补充，因此当前结论为“部分完成”。
 
 已实现：
 
@@ -23,7 +23,7 @@
 - 历史消息完整交互、顶部加载、SSE、发送/停止、工具/来源折叠留给后续阶段；
 - 真实 Agent 服务联调、生产部署和真实 Token 验证未执行；
 - 后端契约核对代理因服务端 HTTP 502 未完成，未将其当作验证通过；
-- 全量测试、构建和 diff 检查尚未完成。
+- 全量测试、构建和 diff 检查留待后续补充。
 
 ## 2. 实际变更
 
@@ -54,12 +54,12 @@ Ant Design 测试环境的 Modal 默认确认按钮文案为 `OK`，测试已改
 | 检查 | 命令 | 结果 |
 | --- | --- | --- |
 | 阶段新增定向测试 | `pnpm --filter tsuz-web-admin-app exec vitest run src/services/jcc-agent-api.test.ts src/pages/JccConversationsPage.test.tsx src/pages/JccConversationPage.test.tsx` | 通过，3 个文件、12 项测试 |
-| App 回归测试 | `pnpm --filter tsuz-web-admin-app exec vitest run src/App.test.tsx` | 首次失败：旧断言期望 6 项，实际 7 项；已修正，待重跑 |
+| App 回归测试 | `pnpm --filter tsuz-web-admin-app exec vitest run src/App.test.tsx` | 通过，1 个文件、18 项测试 |
 | 类型检查 | `pnpm --filter tsuz-web-admin-app lint` | 通过 |
-| 全量应用测试 | `pnpm --filter tsuz-web-admin-app test` | 待执行 |
-| 应用构建 | `pnpm --filter tsuz-web-admin-app build` | 待执行 |
-| 工作区 lint/build | `pnpm lint` / `pnpm build` | 待执行 |
-| Diff 检查 | `git diff --check` | 待执行 |
+| 全量应用测试 | `pnpm --filter tsuz-web-admin-app test` | 后续补充 |
+| 应用构建 | `pnpm --filter tsuz-web-admin-app build` | 后续补充 |
+| 工作区 lint/build | `pnpm lint` / `pnpm build` | 后续补充 |
+| Diff 检查 | `git diff --check` | 后续补充 |
 
 真实 Agent API 联调未执行：当前没有授权的真实服务环境；契约核对代理因 HTTP 502 提前终止，不能替代真实联调。
 
@@ -67,15 +67,15 @@ Ant Design 测试环境的 Modal 默认确认按钮文案为 `OK`，测试已改
 
 | 编号 | 结果 | 证据 |
 | --- | --- | --- |
-| AC-1-01 | 待验证 | App 回归断言已修正，待重跑 |
+| AC-1-01 | 通过 | App 回归测试 18 项通过 |
 | AC-1-02 | 通过 | 列表页和 API 定向测试 |
 | AC-1-03 | 通过 | 列表页实现/测试 |
 | AC-1-04 | 通过 | 创建弹窗测试 |
 | AC-1-05 | 通过 | 创建成功/失败测试 |
 | AC-1-06 | 通过 | 详情页测试负向断言 |
 | AC-1-07 | 通过 | API 测试和类型检查 |
-| AC-1-08 | 待验证 | App 回归待重跑 |
-| AC-1-09 | 待完成 | 总方案链接待同步 |
+| AC-1-08 | 部分通过 | API、页面和 App 定向测试已完成；全量测试留待后续补充 |
+| AC-1-09 | 通过 | 总方案、阶段计划和执行记录已互链 |
 
 ## 7. 安全、兼容性与遗留问题
 
@@ -86,7 +86,7 @@ Ant Design 测试环境的 Modal 默认确认按钮文案为 `OK`，测试已改
 ## 8. 文档同步与阶段结论
 
 - 阶段计划已创建并记录当前实现边界；
-- 本执行记录待最终验证后更新为最终状态；
-- 总方案待补充阶段一状态和本计划/执行记录链接。
+- 本执行记录已同步当前已完成的关键验证结果；全量测试、构建和 diff 检查后续补充；
+- 总方案、阶段计划和本执行记录已完成互链同步。
 
-当前阶段结论为“部分完成”，完成 App 回归、全量验证和总方案同步后再决定是否标记为“已完成”。
+当前阶段结论为“部分完成”：核心代码、定向测试和 App 回归已完成，全量测试及完整质量检查后续补充。

@@ -73,7 +73,7 @@ export default function JccConversationsPage() {
       className="jcc-resource-page"
       title="Agent 会话"
       description="创建并进入 JCC Agent 会话"
-      actions={<Button type="primary" onClick={openCreate}>新建会话</Button>}
+      actions={<Button  type="primary" onClick={openCreate}>新建会话</Button>}
     >
       <Card className="subapp-card jcc-resource-card">
         {query.isError ? (
@@ -90,6 +90,7 @@ export default function JccConversationsPage() {
             loading={query.isLoading}
             dataSource={query.data?.items ?? []}
             columns={columns}
+            scroll={{ x: 1350 }}
             pagination={false}
             locale={{ emptyText: "暂无会话" }}
           />

@@ -404,7 +404,7 @@ packages/shared/src/index.ts
 
 ## 十一、阶段一落地状态
 
-阶段一“接入会话 API 和两个路由”已完成代码实现，具体范围、验收标准和真实验证结果分别记录于：
+阶段一“接入会话 API 和两个路由”已完成核心代码、定向测试和 App 回归（18 项通过）。全量测试、构建和完整质量检查留待后续补充；在补充完成前，阶段状态保持为“部分完成”。具体范围、验收标准和执行记录分别记录于：
 
 - [阶段一实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_1_PLAN.md)；
 - [阶段一执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_1_EXECUTION.md)。
