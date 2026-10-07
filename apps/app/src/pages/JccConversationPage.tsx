@@ -36,6 +36,7 @@ export default function JccConversationPage() {
   const [question, setQuestion] = useState("");
   const [strategyMode, setStrategyMode] = useState<JccAgentStrategyMode>("gamble");
   const [liveResponse, setLiveResponse] = useState<ConversationLiveResponse>();
+  const [localResponses, setLocalResponses] = useState<ConversationLiveResponse[]>([]);
   const [runState, setRunState] = useState<"idle" | "streaming" | "cancelling" | "disconnected">("idle");
   const [runError, setRunError] = useState<unknown>();
   const streamAbortRef = useRef<AbortController | undefined>(undefined);
@@ -131,6 +132,10 @@ export default function JccConversationPage() {
       }),
     onSuccess: (message) => {
       setQuestion("");
+      setLiveResponse((current) => {
+        if (current) setLocalResponses((responses) => [...responses, current]);
+        return undefined;
+      });
       const userMessage = message as JccAgentMessage;
       const assistantMessage: JccAgentMessage = {
         id: `${userMessage.id}-assistant`,
@@ -204,6 +209,7 @@ export default function JccConversationPage() {
                 error={messagesQuery.error}
                 onLoadPrevious={() => void messagesQuery.fetchNextPage()}
                 onRetry={() => void messagesQuery.refetch()}
+                archivedResponses={localResponses}
                 liveResponse={liveResponse}
               />
             </section>

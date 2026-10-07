@@ -50,6 +50,7 @@ export interface ConversationMessageListProps {
   error?: unknown;
   onLoadPrevious: () => void;
   onRetry: () => void;
+  archivedResponses?: ConversationLiveResponse[];
   liveResponse?: ConversationLiveResponse;
 }
 
@@ -112,6 +113,7 @@ export default function ConversationMessageList({
   error,
   onLoadPrevious,
   onRetry,
+  archivedResponses = [],
   liveResponse
 }: ConversationMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -235,6 +237,9 @@ export default function ConversationMessageList({
               <EventCollapse events={group.events} key={`events-${index}`} />
             )
           )}
+          {archivedResponses.map((response) => (
+            <LiveResponse key={response.userMessage.id} response={response} />
+          ))}
           {liveResponse ? <LiveResponse response={liveResponse} /> : null}
         </div>
       )}
