@@ -4,11 +4,14 @@ import {
   ExperimentOutlined,
   FireOutlined,
   GlobalOutlined,
+  MessageOutlined,
   ThunderboltOutlined
 } from "@ant-design/icons";
 import { Layout, Menu, type MenuProps } from "antd";
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import JccConversationPage from "./pages/JccConversationPage";
+import JccConversationsPage from "./pages/JccConversationsPage";
 import JccResourcePage, { type ResourceKey } from "./pages/JccResourcePage";
 
 const { Content, Sider } = Layout;
@@ -66,16 +69,17 @@ const resourceRoutes: ResourceRoute[] = [
   }
 ];
 
-const menuItems: MenuProps["items"] = resourceRoutes.map(({ path, icon, title }) => ({
-  key: path,
-  icon,
-  label: title
-}));
+const conversationPath = "/jcc/conversations";
+const menuItems: MenuProps["items"] = [
+  ...resourceRoutes.map(({ path, icon, title }) => ({ key: path, icon, label: title })),
+  { key: conversationPath, icon: <MessageOutlined />, label: "Agent 会话" }
+];
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedPath = resourceRoutes.find(({ path }) => location.pathname === path)?.path;
+  const selectedKeys = selectedPath ? [selectedPath] : location.pathname.startsWith("/jcc/conversation") ? [conversationPath] : [];
 
   return (
     <Layout className="app-shell">
@@ -91,7 +95,7 @@ export default function App() {
           className="app-menu"
           mode="inline"
           items={menuItems}
-          selectedKeys={selectedPath ? [selectedPath] : []}
+          selectedKeys={selectedKeys}
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
@@ -104,6 +108,8 @@ export default function App() {
               element={<JccResourcePage key={resource} resource={resource} title={title} description={description} />}
             />
           ))}
+          <Route path="/jcc/conversations" element={<JccConversationsPage />} />
+          <Route path="/jcc/conversation/:conversationId" element={<JccConversationPage />} />
           <Route path="*" element={<Navigate replace to="/heroes" />} />
         </Routes>
       </Content>

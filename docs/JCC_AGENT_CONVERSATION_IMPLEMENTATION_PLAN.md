@@ -402,4 +402,11 @@ packages/shared/src/index.ts
 8. 由于鉴权要求，前端必须使用 `fetch` 流式读取，不能使用原生 `EventSource`；
 9. 当前 OpenAPI 对 SSE 响应的声明与实际实现不完全同步：实现返回 `text/event-stream`，OpenAPI 仍显示为 JSON，需要在前端测试和阶段记录中注明这一事实。
 
-这个方案可以完整覆盖你提出的“会话列表 + 新建弹窗 + 会话问答 + 向上加载历史 + 文本流式输出 + 工具调用折叠 + 停止回答”需求。
+## 十一、阶段一落地状态
+
+阶段一“接入会话 API 和两个路由”已完成代码实现，具体范围、验收标准和真实验证结果分别记录于：
+
+- [阶段一实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_1_PLAN.md)；
+- [阶段一执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_1_EXECUTION.md)。
+
+阶段一已落地：会话普通 REST wrapper、`/jcc/conversations` 列表与创建弹窗、`/jcc/conversation/:conversationId` 最小详情页、菜单接入及自动化测试。阶段一明确未实现历史消息完整交互、顶部向上加载、SSE、发送/停止体验和工具/来源折叠；这些能力仍按本方案进入第二、三阶段。真实 Agent 服务联调和部署不在本次代码验证范围内。

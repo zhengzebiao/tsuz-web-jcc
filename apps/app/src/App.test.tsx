@@ -75,7 +75,8 @@ describe("JCC navigation", () => {
   test("renders only approved JCC resource navigation and labels", () => {
     renderApp();
 
-    expect(screen.getAllByRole("menuitem")).toHaveLength(6);
+    expect(screen.getAllByRole("menuitem")).toHaveLength(7);
+    expect(screen.getByRole("menuitem", { name: /Agent 会话$/ })).toBeInTheDocument();
     expect(screen.queryByText("用户管理")).not.toBeInTheDocument();
     expect(screen.queryByText("角色管理")).not.toBeInTheDocument();
     expect(screen.queryByText("权限管理")).not.toBeInTheDocument();
