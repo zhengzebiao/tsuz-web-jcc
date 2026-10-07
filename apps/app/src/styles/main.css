@@ -177,7 +177,7 @@ body {
 }
 
 .jcc-filter-bar {
-  padding: 10px 10px 0;
+  /* padding: 10px 10px 0; */
 }
 
 .jcc-filter-bar .ant-input,
