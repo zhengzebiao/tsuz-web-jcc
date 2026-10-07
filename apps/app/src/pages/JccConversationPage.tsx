@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { PageContainer } from "@tsuz/ui";
-import { Alert, Button, Card, Descriptions, Spin, Tag } from "antd";
+import { Alert, Button, Card, Spin } from "antd";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ConversationMessageList from "../components/jcc/ConversationMessageList";
@@ -43,8 +43,17 @@ export default function JccConversationPage() {
     return [...byId.values()];
   }, [messagesQuery.data]);
 
+  const conversationTitle = conversationQuery.data?.title ?? "标题";
+  const conversationDescription = conversationQuery.data
+    ? `${conversationQuery.data.strategy_mode === "gamble" ? "赌狗" : "运营"} · ${conversationQuery.data.status}`
+    : "风格和状态";
+
   return (
-    <PageContainer title="Agent 会话" description="会话详情">
+    <PageContainer
+      className="jcc-conversation-page"
+      title={conversationTitle}
+      description={conversationDescription}
+    >
       <Card className="subapp-card">
         {!conversationId ? (
           <Alert type="error" message="缺少会话 ID" />
@@ -58,29 +67,17 @@ export default function JccConversationPage() {
         ) : conversationQuery.isLoading ? (
           <Spin />
         ) : conversationQuery.data ? (
-          <>
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label="标题">{conversationQuery.data.title}</Descriptions.Item>
-              <Descriptions.Item label="风格">
-                <Tag>{conversationQuery.data.strategy_mode === "gamble" ? "赌狗" : "运营"}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="状态">{conversationQuery.data.status}</Descriptions.Item>
-              <Descriptions.Item label="创建时间">{conversationQuery.data.created_at}</Descriptions.Item>
-              <Descriptions.Item label="最近更新">{conversationQuery.data.updated_at}</Descriptions.Item>
-            </Descriptions>
-            <section className="jcc-conversation-history" aria-label="消息历史">
-              <h2>消息历史</h2>
-              <ConversationMessageList
-                messages={messages}
-                isInitialLoading={messagesQuery.isLoading}
-                isLoadingPrevious={messagesQuery.isFetchingNextPage}
-                hasPreviousPage={Boolean(messagesQuery.hasNextPage)}
-                error={messagesQuery.error}
-                onLoadPrevious={() => void messagesQuery.fetchNextPage()}
-                onRetry={() => void messagesQuery.refetch()}
-              />
-            </section>
-          </>
+          <section className="jcc-conversation-history">
+            <ConversationMessageList
+              messages={messages}
+              isInitialLoading={messagesQuery.isLoading}
+              isLoadingPrevious={messagesQuery.isFetchingNextPage}
+              hasPreviousPage={Boolean(messagesQuery.hasNextPage)}
+              error={messagesQuery.error}
+              onLoadPrevious={() => void messagesQuery.fetchNextPage()}
+              onRetry={() => void messagesQuery.refetch()}
+            />
+          </section>
         ) : null}
         <Button onClick={() => navigate("/jcc/conversations")} style={{ marginTop: 16 }}>
           返回会话列表

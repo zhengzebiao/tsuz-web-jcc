@@ -22,7 +22,7 @@ function message(overrides: Partial<JccAgentMessage>): JccAgentMessage {
 afterEach(() => cleanup());
 
 describe("ConversationMessageList", () => {
-  test("renders user on the right and assistant on the left", () => {
+  test("renders user on the right and assistant on the left without role labels", () => {
     render(
       <ConversationMessageList
         messages={[message({ id: "user-1", role: "user", content: "提问" }), message({ id: "assistant-1" })]}
@@ -40,6 +40,55 @@ describe("ConversationMessageList", () => {
     expect(screen.getByText("内容").closest(".jcc-conversation-message-row")).toHaveClass(
       "jcc-conversation-message-row--assistant"
     );
+    expect(document.querySelector(".jcc-conversation-role")).not.toBeInTheDocument();
+  });
+
+  test("renders assistant markdown while keeping user content as plain text", () => {
+    render(
+      <ConversationMessageList
+        messages={[
+          message({
+            id: "assistant-markdown",
+            role: "assistant",
+            content: "# 标题\n\n**加粗**\n\n- 第一项"
+          }),
+          message({
+            id: "user-markdown",
+            role: "user",
+            content: "**不要解析** [链接](https://example.com)"
+          })
+        ]}
+        isInitialLoading={false}
+        isLoadingPrevious={false}
+        hasPreviousPage={false}
+        onLoadPrevious={vi.fn()}
+        onRetry={vi.fn()}
+      />
+    );
+
+    const assistantRow = document.querySelector(".jcc-conversation-message-row--assistant");
+    const userRow = document.querySelector(".jcc-conversation-message-row--user");
+    expect(assistantRow?.querySelector("h1")).toHaveTextContent("标题");
+    expect(assistantRow?.querySelector("strong")).toHaveTextContent("加粗");
+    expect(assistantRow?.querySelector("li")).toHaveTextContent("第一项");
+    expect(userRow?.querySelector("strong, a, ul, ol")).toBeNull();
+    expect(userRow).toHaveTextContent("**不要解析** [链接](https://example.com)");
+  });
+
+  test("does not render assistant HTML as executable markup", () => {
+    render(
+      <ConversationMessageList
+        messages={[message({ id: "unsafe", role: "assistant", content: '<script>alert("xss")</script>\n\n**文本**' })]}
+        isInitialLoading={false}
+        isLoadingPrevious={false}
+        hasPreviousPage={false}
+        onLoadPrevious={vi.fn()}
+        onRetry={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector("script")).toBeNull();
+    expect(screen.getByText("文本")).toBeInTheDocument();
   });
 
   test("groups tool and system events under the nearest assistant and keeps empty events", () => {
@@ -98,8 +147,8 @@ describe("ConversationMessageList", () => {
     );
 
     fireEvent.click(screen.getByText("1 条事件记录"));
-    expect(screen.getByText("custom")).toBeInTheDocument();
     expect(screen.getByText("未知事件")).toBeInTheDocument();
+    expect(document.querySelector(".jcc-conversation-role")).not.toBeInTheDocument();
   });
 
   test("restores the viewport after prepending messages", () => {

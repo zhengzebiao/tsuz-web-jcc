@@ -48,8 +48,10 @@ describe("JccConversationPage", () => {
   test("loads conversation detail and the first message page", async () => {
     renderPage();
 
-    expect(await screen.findByText("上分计划")).toBeInTheDocument();
-    expect(screen.getByText("运营")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "上分计划" })).toBeInTheDocument();
+    expect(screen.getByText("运营 · active")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "消息历史" })).not.toBeInTheDocument();
+    expect(document.querySelector(".ant-descriptions-view")).not.toBeInTheDocument();
     expect(await screen.findByText("请分析")).toBeInTheDocument();
     expect(apiGet).toHaveBeenCalledWith("/jcc/agent/conversations/conversation-1");
     expect(apiGet).toHaveBeenCalledWith("/jcc/agent/conversations/conversation-1/messages", {
@@ -102,7 +104,7 @@ describe("JccConversationPage", () => {
     });
     renderPage();
 
-    expect(await screen.findByText("上分计划")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "上分计划" })).toBeInTheDocument();
     expect(await screen.findByText("消息历史加载失败")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "重新加载消息" }));
     expect(await screen.findByText("请分析")).toBeInTheDocument();
@@ -122,13 +124,13 @@ describe("JccConversationPage", () => {
 
     expect(await screen.findByText("详情不可用")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "重新加载" }));
-    expect(await screen.findByText("上分计划")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "上分计划" })).toBeInTheDocument();
     expect(detailAttempts).toBe(2);
   });
 
   test("returns to the conversation list", async () => {
     renderPage();
-    await screen.findByText("上分计划");
+    await screen.findByText("请分析");
 
     fireEvent.click(screen.getByRole("button", { name: "返回会话列表" }));
 

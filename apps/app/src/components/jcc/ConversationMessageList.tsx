@@ -1,4 +1,6 @@
 import { Collapse, Empty, Spin } from "antd";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useLayoutEffect, useRef } from "react";
 import type { JccAgentMessage } from "../../services/jcc-agent-api";
 
@@ -146,11 +148,16 @@ export default function ConversationMessageList({
                 key={group.message.id}
               >
                 <div className="jcc-conversation-bubble">
-                  <span className="jcc-conversation-role">
-                    {group.message.role === "user" ? "用户" : "Agent"}
-                  </span>
                   <div className="jcc-conversation-content">
-                    {group.message.content?.trim() || "空消息"}
+                    {group.message.role === "assistant" ? (
+                      <div className="jcc-conversation-markdown">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {group.message.content?.trim() || "空消息"}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      group.message.content?.trim() || "空消息"
+                    )}
                   </div>
                 </div>
                 {group.events.length > 0 ? (
@@ -188,9 +195,6 @@ function EventCollapse({ events }: { events: JccAgentMessage[] }) {
             <div>
               {events.map((event) => (
                 <div className="jcc-conversation-event" key={event.id}>
-                  <span className="jcc-conversation-role">
-                    {event.role === "tool" ? "工具" : event.role === "system" ? "系统" : event.role}
-                  </span>
                   <time>{event.created_at}</time>
                   <div className="jcc-conversation-content">
                     {event.content?.trim() || "空事件记录"}
