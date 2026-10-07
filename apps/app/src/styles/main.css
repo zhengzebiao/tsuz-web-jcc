@@ -199,6 +199,10 @@ body {
   letter-spacing: 0.03em;
 }
 
+.jcc-resource-card .ant-table-tbody > tr > td {
+  font-size: 14px;
+}
+
 .jcc-resource-row {
   cursor: pointer;
   transition:
@@ -234,8 +238,25 @@ body {
 }
 
 .jcc-pagination-row {
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: max-content;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  overflow-x: auto;
   padding: 18px 20px 20px;
   border-top: 1px solid #edf1ef;
+}
+
+.jcc-pagination-row > .ant-pagination {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.jcc-pagination-row > .ant-typography {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .jcc-detail .ant-descriptions-item-label {

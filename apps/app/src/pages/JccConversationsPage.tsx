@@ -101,6 +101,7 @@ export default function JccConversationsPage() {
               {query.data ? `已加载 ${query.data.items.length} 条` : "等待会话"}
             </Typography.Text>
             <Pagination
+              className="subapp-pagination"
               current={page}
               pageSize={PAGE_SIZE}
               total={query.data?.total ?? 0}
