@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ApiClient } from "@tsuz/api";
 import { App as AntApp } from "antd";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createMfeApiClient } from "../services/api-client";
 import type {
@@ -17,7 +17,8 @@ vi.mock("../services/api-client", () => ({
 }));
 
 const apiGet = vi.fn<ApiClient["get"]>();
-const apiClient = { get: apiGet } as unknown as ApiClient;
+const apiPost = vi.fn<ApiClient["post"]>();
+const apiClient = { get: apiGet, post: apiPost } as unknown as ApiClient;
 const conversation: JccAgentConversation = {
   id: "conversation-1",
   title: "上分计划",
@@ -34,6 +35,7 @@ const currentMessages = [
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(createMfeApiClient).mockReturnValue(apiClient);
+  apiPost.mockResolvedValue(createMessage({ id: "message-4", role: "user", content: "新问题" }));
   apiGet.mockImplementation((path) => {
     if (String(path).endsWith("/messages")) {
       return Promise.resolve(createMessagePage(currentMessages, currentMessages.length, 0));
@@ -57,7 +59,9 @@ describe("JccConversationPage", () => {
     expect(apiGet).toHaveBeenCalledWith("/jcc/agent/conversations/conversation-1/messages", {
       query: { limit: 20, offset: 0 }
     });
-    expect(screen.queryByRole("button", { name: /发送|停止/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "输入问题" })).toBeInTheDocument();
+    expect(screen.getAllByLabelText("会话风格")[0]).toHaveTextContent("运营");
+    expect(screen.getByRole("button", { name: "发送" })).toBeDisabled();
     expect(apiGet.mock.calls.some(([path]) => String(path).includes("/events"))).toBe(false);
     expect(apiGet.mock.calls.some(([path]) => String(path).includes("/cancel"))).toBe(false);
   });
@@ -128,13 +132,21 @@ describe("JccConversationPage", () => {
     expect(detailAttempts).toBe(2);
   });
 
-  test("returns to the conversation list", async () => {
+  test("sends a trimmed question with the selected strategy", async () => {
     renderPage();
     await screen.findByText("请分析");
 
-    fireEvent.click(screen.getByRole("button", { name: "返回会话列表" }));
+    const input = screen.getByRole("textbox", { name: "输入问题" });
+    fireEvent.change(input, { target: { value: "  新问题  " } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
 
-    await waitFor(() => expect(screen.getByTestId("current-path")).toHaveTextContent("/jcc/conversations"));
+    await waitFor(() =>
+      expect(apiPost).toHaveBeenCalledWith(
+        "/jcc/agent/conversations/conversation-1/messages",
+        expect.objectContaining({ content: "新问题", strategy_mode: "operation" })
+      )
+    );
+    expect(input).toHaveValue("");
   });
 });
 
@@ -166,16 +178,9 @@ function renderPage() {
         <MemoryRouter initialEntries={["/jcc/conversation/conversation-1"]}>
           <Routes>
             <Route path="/jcc/conversation/:conversationId" element={<JccConversationPage />} />
-            <Route path="/jcc/conversations" element={<div>会话列表页</div>} />
           </Routes>
-          <RouteProbe />
         </MemoryRouter>
       </AntApp>
     </QueryClientProvider>
   );
-}
-
-function RouteProbe() {
-  const location = useLocation();
-  return <output data-testid="current-path">{location.pathname}</output>;
 }

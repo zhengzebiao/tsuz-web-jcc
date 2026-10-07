@@ -1,14 +1,17 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageContainer } from "@tsuz/ui";
 import { Alert, Button, Card, Spin } from "antd";
-import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import ConversationComposer from "../components/jcc/ConversationComposer";
 import ConversationMessageList from "../components/jcc/ConversationMessageList";
 import { createMfeApiClient } from "../services/api-client";
 import {
   getJccAgentConversation,
   listJccAgentMessages,
-  type JccAgentMessage
+  sendJccAgentMessage,
+  type JccAgentMessage,
+  type JccAgentStrategyMode
 } from "../services/jcc-agent-api";
 import { useAppStore } from "../stores/app.store";
 
@@ -18,7 +21,9 @@ export default function JccConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const hostProps = useAppStore((state) => state.hostProps);
   const client = useMemo(() => createMfeApiClient(hostProps), [hostProps]);
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [question, setQuestion] = useState("");
+  const [strategyMode, setStrategyMode] = useState<JccAgentStrategyMode>("gamble");
   const conversationQuery = useQuery({
     queryKey: ["jcc-agent", "conversation", conversationId],
     queryFn: () => getJccAgentConversation(client, conversationId ?? ""),
@@ -42,6 +47,25 @@ export default function JccConversationPage() {
     });
     return [...byId.values()];
   }, [messagesQuery.data]);
+
+  const sendMutation = useMutation({
+    mutationFn: (content: string) =>
+      sendJccAgentMessage(client, conversationId ?? "", {
+        content,
+        strategy_mode: strategyMode,
+        client_request_id: crypto.randomUUID()
+      }),
+    onSuccess: async () => {
+      setQuestion("");
+      await queryClient.invalidateQueries({
+        queryKey: ["jcc-agent", "conversation", conversationId, "messages"]
+      });
+    }
+  });
+
+  useEffect(() => {
+    if (conversationQuery.data) setStrategyMode(conversationQuery.data.strategy_mode);
+  }, [conversationQuery.data]);
 
   const conversationTitle = conversationQuery.data?.title ?? "标题";
   const conversationDescription = conversationQuery.data
@@ -67,21 +91,29 @@ export default function JccConversationPage() {
         ) : conversationQuery.isLoading ? (
           <Spin />
         ) : conversationQuery.data ? (
-          <section className="jcc-conversation-history">
-            <ConversationMessageList
-              messages={messages}
-              isInitialLoading={messagesQuery.isLoading}
-              isLoadingPrevious={messagesQuery.isFetchingNextPage}
-              hasPreviousPage={Boolean(messagesQuery.hasNextPage)}
-              error={messagesQuery.error}
-              onLoadPrevious={() => void messagesQuery.fetchNextPage()}
-              onRetry={() => void messagesQuery.refetch()}
+          <section className="jcc-conversation-workspace">
+            <section className="jcc-conversation-history">
+              <ConversationMessageList
+                messages={messages}
+                isInitialLoading={messagesQuery.isLoading}
+                isLoadingPrevious={messagesQuery.isFetchingNextPage}
+                hasPreviousPage={Boolean(messagesQuery.hasNextPage)}
+                error={messagesQuery.error}
+                onLoadPrevious={() => void messagesQuery.fetchNextPage()}
+                onRetry={() => void messagesQuery.refetch()}
+              />
+            </section>
+            <ConversationComposer
+              value={question}
+              strategyMode={strategyMode}
+              isSending={sendMutation.isPending}
+              error={sendMutation.error}
+              onChange={setQuestion}
+              onStrategyModeChange={setStrategyMode}
+              onSubmit={() => void sendMutation.mutateAsync(question.trim())}
             />
           </section>
         ) : null}
-        <Button onClick={() => navigate("/jcc/conversations")} style={{ marginTop: 16 }}>
-          返回会话列表
-        </Button>
       </Card>
     </PageContainer>
   );

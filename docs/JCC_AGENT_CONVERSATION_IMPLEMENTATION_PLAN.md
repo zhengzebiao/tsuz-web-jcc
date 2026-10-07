@@ -424,4 +424,6 @@ packages/shared/src/index.ts
 - [阶段二实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_2_PLAN.md)；
 - [阶段二执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_2_EXECUTION.md)。
 
-阶段二已实现详情页历史消息查询、角色布局、工具/系统折叠事件、顶部 offset 分页和滚动位置恢复。由于消息类型尚无结构化工具关联字段，tool/system 当前按消息顺序挂到最近 assistant；由于未执行真实 Agent 服务联调，`offset=0` 的实际方向仍待确认。全量测试、构建和真实浏览器验证按当前阶段约束未执行。SSE、发送、停止和断线恢复仍属于第三阶段。
+阶段二已实现详情页历史消息查询、角色布局、工具/系统折叠事件、顶部 offset 分页和滚动位置恢复。由于消息类型尚无结构化工具关联字段，tool/system 当前按消息顺序挂到最近 assistant；由于未执行真实 Agent 服务联调，`offset=0` 的实际方向仍待确认。阶段二执行记录保留其原验收边界。
+
+本次根据页面结构确认，已补充会话工作区 UI：保留动态标题/描述，删除底部返回按钮，消息区改为卡片内可伸缩滚动区域，并增加问题输入、风格选择和发送栏。复用既有发送 REST wrapper，发送成功后刷新历史消息；SSE、实时工具事件、停止/取消和断线恢复仍未实现，作为后续阶段入口。详见[页面工作区与输入栏执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)。
