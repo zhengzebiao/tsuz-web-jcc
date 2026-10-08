@@ -408,7 +408,7 @@ body {
 }
 
 .app-menu {
-  min-height: 100%;
+  /* min-height: 100%; */
   padding: 12px 14px;
   border-inline-end: 0 !important;
   background: transparent;
