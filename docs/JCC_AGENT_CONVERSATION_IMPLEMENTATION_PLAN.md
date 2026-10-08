@@ -380,7 +380,7 @@ packages/shared/src/index.ts
 - 完成、失败、取消状态；
 - 断线和 Last-Event-ID 恢复。
 
-第三阶段实现计划：[第三阶段实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_PLAN.md)。当前状态为“实施中”；此前的页面工作区与输入栏改造记录在[第三阶段前置 UI 执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)，不等同于 SSE 问答已完成。
+第三阶段实现计划：[第三阶段实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_PLAN.md)，当前状态为“已完成”；阶段执行事实及用户功能测试通过记录见[第三阶段执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)。此前的页面工作区与输入栏改造也保留在该执行记录中。
 
 ### 第四步：测试和文档
 
@@ -428,4 +428,13 @@ packages/shared/src/index.ts
 
 阶段二已实现详情页历史消息查询、角色布局、工具/系统折叠事件、顶部 offset 分页和滚动位置恢复。由于消息类型尚无结构化工具关联字段，tool/system 当前按消息顺序挂到最近 assistant；由于未执行真实 Agent 服务联调，`offset=0` 的实际方向仍待确认。阶段二执行记录保留其原验收边界。
 
-本次根据页面结构确认，已补充会话工作区 UI：保留动态标题/描述，删除底部返回按钮，消息区改为卡片内可伸缩滚动区域，并增加问题输入、风格选择和发送栏。复用既有发送 REST wrapper，发送成功后刷新历史消息；SSE、实时工具事件、停止/取消和断线恢复仍未实现，作为后续阶段入口。详见[页面工作区与输入栏执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)。
+## 十三、阶段三落地状态
+
+阶段三“实现 SSE 问答”已完成代码、定向验证和用户功能测试，阶段状态为“已完成”：
+
+- [阶段三实现计划](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_PLAN.md)；
+- [阶段三执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)。
+
+阶段三已实现鉴权 SSE 流、增量文本、工具/source 事件折叠、完成/失败/取消状态、后端取消、前端中止和 Last-Event-ID 手动恢复；用户已完成当前阶段功能测试并反馈通过。真实 Agent 服务契约、真实 Token、取消接口、事件 payload、Last-Event-ID 语义及部署仍未执行，继续作为发布前真实环境验证项追踪。
+
+本次根据页面结构确认，已补充会话工作区 UI：保留动态标题/描述，删除底部返回按钮，消息区改为卡片内可伸缩滚动区域，并增加问题输入、风格选择和发送栏。复用既有发送 REST wrapper，发送成功后刷新历史消息；SSE、实时工具事件、停止/取消和断线恢复已在第三阶段实现。详见[第三阶段执行记录](../plan/JCC_AGENT_CONVERSATION_IMPLEMENTATION_PHASE_3_EXECUTION.md)。
